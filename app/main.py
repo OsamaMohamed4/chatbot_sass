@@ -1,29 +1,17 @@
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from prometheus_fastapi_instrumentator import Instrumentator
-import sentry_sdk
-from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 import logging
-from .core.config import settings
-from .api.v1 import auth, admin
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO if settings.ENVIRONMENT == "production" else logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+from app.core.config import settings
+from app.core.logging_config import setup_logging
+from app.middleware.error_handler import register_exception_handlers
+from app.middleware.request_logging import RequestLoggingMiddleware, RequestContextMiddleware
+from app.api.v1 import auth, companies
+
+# Setup logging first
+setup_logging()
 logger = logging.getLogger(__name__)
-
-# Initialize Sentry if configured
-if settings.SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
-        environment=settings.ENVIRONMENT,
-        traces_sample_rate=0.1 if settings.ENVIRONMENT == "production" else 1.0,
-    )
 
 # Create FastAPI app
 app = FastAPI(
@@ -32,9 +20,37 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    description="""
+    # Chatbot SaaS Platform API
+    
+    A comprehensive SaaS platform for managing AI-powered chatbots.
+    
+    ## Features
+    
+    * **Authentication & Authorization**: JWT-based authentication with role-based access control
+    * **Company Management**: Create and manage client companies with resource plans
+    * **User Management**: Multi-level user hierarchy with custom permissions
+    * **Resource Allocation**: Track and manage resource usage and limits
+    * **Comprehensive Logging**: Structured logging with request tracking
+    * **Error Handling**: Standardized error responses with detailed information
+    
+    ## Authentication
+    
+    All endpoints (except auth endpoints) require a valid JWT token in the Authorization header:
+    
+    ```
+    Authorization: Bearer <your_access_token>
+    ```
+    """,
+    contact={
+        "name": "API Support",
+        "email": settings.FIRST_SUPERUSER_EMAIL,
+    },
 )
 
-# Set up CORS
+# ========================
+# CORS Middleware
+# ========================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -43,149 +59,75 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add Sentry middleware
-if settings.SENTRY_DSN:
-    app.add_middleware(SentryAsgiMiddleware)
+# ========================
+# Custom Middlewares
+# ========================
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(RequestContextMiddleware)
 
-# Set up Prometheus metrics
-if settings.ENVIRONMENT == "production":
-    Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+# ========================
+# Exception Handlers
+# ========================
+register_exception_handlers(app)
 
+# ========================
+# Health Check Endpoint
+# ========================
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "environment": settings.ENVIRONMENT,
+        "version": settings.VERSION
+    }
 
-import asyncio
-import logging
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.core.database import AsyncSessionLocal
-from app.core.config import settings
-from app.core.security import security_service
-from app.models.system_admin import SystemAdmin
-from app.models.client_company import ResourcePlan
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint"""
+    return {
+        "message": f"Welcome to {settings.PROJECT_NAME}",
+        "version": settings.VERSION,
+        "docs_url": "/docs" if settings.ENVIRONMENT != "production" else None,
+        "environment": settings.ENVIRONMENT
+    }
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# ========================
+# API Routes
+# ========================
+app.include_router(
+    auth.router,
+    prefix=f"{settings.API_V1_STR}/auth",
+    tags=["Authentication"]
+)
 
-async def create_initial_superuser(db: AsyncSession) -> None:
-    """Create the first superuser if it doesn't exist"""
-    result = await db.execute(
-        select(SystemAdmin).where(
-            SystemAdmin.email == settings.FIRST_SUPERUSER_EMAIL
-        )
-    )
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        user = SystemAdmin(
-            username="superadmin",
-            email=settings.FIRST_SUPERUSER_EMAIL,
-            password_hash=security_service.get_password_hash(
-                settings.FIRST_SUPERUSER_PASSWORD
-            ),
-            first_name=settings.FIRST_SUPERUSER_FIRSTNAME,
-            last_name=settings.FIRST_SUPERUSER_LASTNAME,
-            is_superuser=True,
-            is_active=True
-        )
-        db.add(user)
-        await db.commit()
-        logger.info(f"Superuser created: {settings.FIRST_SUPERUSER_EMAIL}")
-    else:
-        logger.info(f"Superuser already exists: {settings.FIRST_SUPERUSER_EMAIL}")
+app.include_router(
+    companies.router,
+    prefix=f"{settings.API_V1_STR}/companies",
+    tags=["Companies"]
+)
 
-async def create_default_resource_plans(db: AsyncSession) -> None:
-    """Create default resource plans"""
-    plans = [
-        {
-            "plan_name": "Starter",
-            "plan_type": "starter",
-            "max_ai_models": 1,
-            "max_users": 3,
-            "max_websites": 1,
-            "max_monthly_requests": 1000,
-            "max_storage_gb": 1,
-            "max_training_hours": 5,
-            "monthly_cost": 29.99,
-            "yearly_cost": 299.99,
-            "features": {
-                "basic_analytics": True,
-                "email_support": True,
-                "custom_branding": False,
-                "api_access": False,
-                "priority_support": False,
-                "advanced_analytics": False,
-                "white_label": False
-            }
-        },
-        {
-            "plan_name": "Professional",
-            "plan_type": "professional",
-            "max_ai_models": 3,
-            "max_users": 10,
-            "max_websites": 3,
-            "max_monthly_requests": 10000,
-            "max_storage_gb": 10,
-            "max_training_hours": 20,
-            "monthly_cost": 99.99,
-            "yearly_cost": 999.99,
-            "features": {
-                "basic_analytics": True,
-                "email_support": True,
-                "custom_branding": True,
-                "api_access": True,
-                "priority_support": True,
-                "advanced_analytics": True,
-                "white_label": False
-            }
-        },
-        {
-            "plan_name": "Enterprise",
-            "plan_type": "enterprise",
-            "max_ai_models": 10,
-            "max_users": 50,
-            "max_websites": 10,
-            "max_monthly_requests": 100000,
-            "max_storage_gb": 100,
-            "max_training_hours": 100,
-            "monthly_cost": 499.99,
-            "yearly_cost": 4999.99,
-            "features": {
-                "basic_analytics": True,
-                "email_support": True,
-                "custom_branding": True,
-                "api_access": True,
-                "priority_support": True,
-                "advanced_analytics": True,
-                "white_label": True
-            }
-        }
-    ]
-    
-    for plan_data in plans:
-        result = await db.execute(
-            select(ResourcePlan).where(
-                ResourcePlan.plan_name == plan_data["plan_name"]
-            )
-        )
-        existing_plan = result.scalar_one_or_none()
-        
-        if not existing_plan:
-            plan = ResourcePlan(**plan_data)
-            db.add(plan)
-            logger.info(f"Resource plan created: {plan_data['plan_name']}")
-        else:
-            logger.info(f"Resource plan already exists: {plan_data['plan_name']}")
-    
-    await db.commit()
+# ========================
+# Startup & Shutdown Events
+# ========================
+@app.on_event("startup")
+async def startup_event():
+    """Run on application startup"""
+    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info("Application startup complete")
 
-async def init_db() -> None:
-    """Initialize database with default data"""
-    logger.info("Creating initial data...")
-    
-    async with AsyncSessionLocal() as db:
-        await create_initial_superuser(db)
-        await create_default_resource_plans(db)
-    
-    logger.info("Initial data created successfully")
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Run on application shutdown"""
+    logger.info("Application shutting down")
+
 
 if __name__ == "__main__":
-    asyncio.run(init_db())
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True if settings.ENVIRONMENT == "development" else False
+    )

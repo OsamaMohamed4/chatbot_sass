@@ -1,8 +1,8 @@
 """initial commit
 
-Revision ID: 577913114457
+Revision ID: 8d04d1d51df2
 Revises: 
-Create Date: 2025-10-09 17:55:59.388821
+Create Date: 2025-10-13 17:06:35.891478
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '577913114457'
+revision: str = '8d04d1d51df2'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -115,8 +115,8 @@ def upgrade() -> None:
     op.drop_index('ix_client_companies_company_id', table_name='client_companies')
     op.drop_index('ix_client_companies_company_name', table_name='client_companies')
     op.create_index(op.f('ix_client_companies_id'), 'client_companies', ['id'], unique=False)
-    op.create_unique_constraint(None, 'client_companies', ['company_name'])
     op.create_unique_constraint(None, 'client_companies', ['company_email'])
+    op.create_unique_constraint(None, 'client_companies', ['company_name'])
     op.drop_constraint('client_companies_admin_id_fkey', 'client_companies', type_='foreignkey')
     op.create_foreign_key(None, 'client_companies', 'resource_plans', ['resource_plan_id'], ['id'])
     op.create_foreign_key(None, 'client_companies', 'system_admins', ['admin_id'], ['id'])
@@ -166,8 +166,8 @@ def upgrade() -> None:
     op.create_index(op.f('ix_company_users_id'), 'company_users', ['id'], unique=False)
     op.drop_constraint('company_users_company_id_fkey', 'company_users', type_='foreignkey')
     op.drop_constraint('company_users_parent_user_id_fkey', 'company_users', type_='foreignkey')
-    op.create_foreign_key(None, 'company_users', 'client_companies', ['company_id'], ['id'])
     op.create_foreign_key(None, 'company_users', 'company_users', ['created_by_id'], ['id'])
+    op.create_foreign_key(None, 'company_users', 'client_companies', ['company_id'], ['id'])
     op.drop_column('company_users', 'user_id')
     op.drop_column('company_users', 'parent_user_id')
     op.add_column('resource_allocations', sa.Column('current_websites', sa.Integer(), nullable=True))
@@ -189,10 +189,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_resource_allocations_id'), 'resource_allocations', ['id'], unique=False)
     op.drop_constraint('resource_allocations_plan_id_fkey', 'resource_allocations', type_='foreignkey')
     op.drop_constraint('resource_allocations_company_id_fkey', 'resource_allocations', type_='foreignkey')
-    op.create_foreign_key(None, 'resource_allocations', 'client_companies', ['company_id'], ['id'])
     op.create_foreign_key(None, 'resource_allocations', 'resource_plans', ['plan_id'], ['id'])
-    op.drop_column('resource_allocations', 'allocated_at')
+    op.create_foreign_key(None, 'resource_allocations', 'client_companies', ['company_id'], ['id'])
     op.drop_column('resource_allocations', 'expires_at')
+    op.drop_column('resource_allocations', 'allocated_at')
     op.drop_column('resource_allocations', 'allocation_id')
     op.add_column('resource_plans', sa.Column('plan_type', sa.String(length=20), nullable=False))
     op.add_column('resource_plans', sa.Column('max_websites', sa.Integer(), nullable=False))
@@ -259,12 +259,12 @@ def upgrade() -> None:
     op.alter_column('usage_analytics', 'avg_response_time_ms',
                existing_type=sa.NUMERIC(precision=10, scale=2),
                nullable=False)
-    op.drop_constraint('usage_analytics_user_id_fkey', 'usage_analytics', type_='foreignkey')
-    op.drop_constraint('usage_analytics_website_id_fkey', 'usage_analytics', type_='foreignkey')
     op.drop_constraint('usage_analytics_company_id_fkey', 'usage_analytics', type_='foreignkey')
+    op.drop_constraint('usage_analytics_website_id_fkey', 'usage_analytics', type_='foreignkey')
+    op.drop_constraint('usage_analytics_user_id_fkey', 'usage_analytics', type_='foreignkey')
     op.create_foreign_key(None, 'usage_analytics', 'websites', ['website_id'], ['id'])
-    op.create_foreign_key(None, 'usage_analytics', 'company_users', ['user_id'], ['id'])
     op.create_foreign_key(None, 'usage_analytics', 'client_companies', ['company_id'], ['id'])
+    op.create_foreign_key(None, 'usage_analytics', 'company_users', ['user_id'], ['id'])
     op.add_column('websites', sa.Column('widget_config', sa.JSON(), nullable=True))
     op.add_column('websites', sa.Column('business_hours', sa.JSON(), nullable=True))
     op.add_column('websites', sa.Column('welcome_message', sa.String(length=500), nullable=True))
@@ -305,8 +305,8 @@ def upgrade() -> None:
     op.drop_index('ix_websites_website_name', table_name='websites')
     op.create_index(op.f('ix_websites_id'), 'websites', ['id'], unique=False)
     op.drop_constraint('websites_company_id_fkey', 'websites', type_='foreignkey')
-    op.create_foreign_key(None, 'websites', 'client_companies', ['company_id'], ['id'])
     op.create_foreign_key(None, 'websites', 'ai_models', ['primary_ai_model_id'], ['model_id'])
+    op.create_foreign_key(None, 'websites', 'client_companies', ['company_id'], ['id'])
     op.drop_column('websites', 'website_config')
     op.drop_column('websites', 'website_id')
     # ### end Alembic commands ###
@@ -361,9 +361,9 @@ def downgrade() -> None:
     op.drop_constraint(None, 'usage_analytics', type_='foreignkey')
     op.drop_constraint(None, 'usage_analytics', type_='foreignkey')
     op.drop_constraint(None, 'usage_analytics', type_='foreignkey')
-    op.create_foreign_key('usage_analytics_company_id_fkey', 'usage_analytics', 'client_companies', ['company_id'], ['company_id'])
-    op.create_foreign_key('usage_analytics_website_id_fkey', 'usage_analytics', 'websites', ['website_id'], ['website_id'])
     op.create_foreign_key('usage_analytics_user_id_fkey', 'usage_analytics', 'company_users', ['user_id'], ['user_id'])
+    op.create_foreign_key('usage_analytics_website_id_fkey', 'usage_analytics', 'websites', ['website_id'], ['website_id'])
+    op.create_foreign_key('usage_analytics_company_id_fkey', 'usage_analytics', 'client_companies', ['company_id'], ['company_id'])
     op.alter_column('usage_analytics', 'avg_response_time_ms',
                existing_type=sa.NUMERIC(precision=10, scale=2),
                nullable=True)
@@ -376,7 +376,7 @@ def downgrade() -> None:
     op.alter_column('usage_analytics', 'total_requests',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.add_column('system_admins', sa.Column('admin_id', sa.INTEGER(), server_default=sa.text("nextval('system_admins_admin_id_seq'::regclass)"), autoincrement=True, nullable=False))
+    op.add_column('system_admins', sa.Column('admin_id', sa.INTEGER(), autoincrement=True, nullable=False))
     op.drop_index(op.f('ix_system_admins_id'), table_name='system_admins')
     op.create_index('ix_system_admins_admin_id', 'system_admins', ['admin_id'], unique=False)
     op.alter_column('system_admins', 'created_at',
@@ -410,7 +410,7 @@ def downgrade() -> None:
     op.drop_column('system_admins', 'failed_login_attempts')
     op.drop_column('system_admins', 'last_login_at')
     op.drop_column('system_admins', 'is_superuser')
-    op.add_column('resource_plans', sa.Column('plan_id', sa.INTEGER(), server_default=sa.text("nextval('resource_plans_plan_id_seq'::regclass)"), autoincrement=True, nullable=False))
+    op.add_column('resource_plans', sa.Column('plan_id', sa.INTEGER(), autoincrement=True, nullable=False))
     op.drop_constraint(None, 'resource_plans', type_='unique')
     op.drop_index(op.f('ix_resource_plans_id'), table_name='resource_plans')
     op.create_index('ix_resource_plans_plan_id', 'resource_plans', ['plan_id'], unique=False)
@@ -430,8 +430,8 @@ def downgrade() -> None:
     op.drop_column('resource_plans', 'max_websites')
     op.drop_column('resource_plans', 'plan_type')
     op.add_column('resource_allocations', sa.Column('allocation_id', sa.INTEGER(), autoincrement=True, nullable=False))
-    op.add_column('resource_allocations', sa.Column('expires_at', postgresql.TIMESTAMP(), autoincrement=False, nullable=False))
     op.add_column('resource_allocations', sa.Column('allocated_at', postgresql.TIMESTAMP(), autoincrement=False, nullable=True))
+    op.add_column('resource_allocations', sa.Column('expires_at', postgresql.TIMESTAMP(), autoincrement=False, nullable=False))
     op.drop_constraint(None, 'resource_allocations', type_='foreignkey')
     op.drop_constraint(None, 'resource_allocations', type_='foreignkey')
     op.create_foreign_key('resource_allocations_company_id_fkey', 'resource_allocations', 'client_companies', ['company_id'], ['company_id'])
@@ -502,7 +502,7 @@ def downgrade() -> None:
     op.drop_column('company_users', 'locked_until')
     op.drop_column('company_users', 'failed_login_attempts')
     op.drop_column('company_users', 'custom_permissions')
-    op.add_column('client_companies', sa.Column('company_id', sa.INTEGER(), autoincrement=True, nullable=False))
+    op.add_column('client_companies', sa.Column('company_id', sa.INTEGER(), server_default=sa.text("nextval('client_companies_company_id_seq'::regclass)"), autoincrement=True, nullable=False))
     op.drop_constraint(None, 'client_companies', type_='foreignkey')
     op.drop_constraint(None, 'client_companies', type_='foreignkey')
     op.create_foreign_key('client_companies_admin_id_fkey', 'client_companies', 'system_admins', ['admin_id'], ['admin_id'])
