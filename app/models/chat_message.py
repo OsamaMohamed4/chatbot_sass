@@ -2,10 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, J
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..core.database import Base
-from typing import Optional, Dict, Any
-from decimal import Decimal
 
-# SQLAlchemy Model
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
@@ -19,5 +16,5 @@ class ChatMessage(Base):
     tokens_used = Column(Numeric(10, 2))
     is_user_message = Column(Boolean, nullable=False)
 
-    # Relationships
+    # Fixed Relationships
     chat_session = relationship("ChatSession", back_populates="chat_messages")

@@ -28,8 +28,9 @@ class CompanyUser(Base, BaseModel):
     company_id = Column(Integer, ForeignKey("client_companies.id"))
     created_by_id = Column(Integer, ForeignKey("company_users.id"))
     
-    # Relationships
+    # Fixed Relationships
     company = relationship("ClientCompany", back_populates="users")
-    created_by = relationship("CompanyUser", remote_side="CompanyUser.id")
-    website_access = relationship("UserWebsiteAccess", back_populates="user", cascade="all, delete-orphan")
-    chat_sessions = relationship("ChatSession", back_populates="user")
+    created_by = relationship("CompanyUser", remote_side="CompanyUser.id", foreign_keys=[created_by_id])
+    website_access = relationship("UserWebsiteAccess", back_populates="user", cascade="all, delete-orphan", foreign_keys="[UserWebsiteAccess.user_id]")
+    chat_sessions = relationship("ChatSession", back_populates="company_user")
+    usage_analytics = relationship("UsageAnalytics", back_populates="company_user")

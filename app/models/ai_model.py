@@ -2,9 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..core.database import Base
-from typing import Optional, Dict, Any
 
-# SQLAlchemy Model
 class AiModel(Base):
     __tablename__ = "ai_models"
 
@@ -18,6 +16,6 @@ class AiModel(Base):
     status = Column(String(50), default="inactive", nullable=False)
     last_trained_at = Column(DateTime)
 
-    # Relationships
-    website = relationship("Website", back_populates="ai_models")
+    # Fixed Relationships
+    website = relationship("Website", back_populates="ai_models", foreign_keys=[website_id])
     chat_sessions = relationship("ChatSession", back_populates="ai_model")

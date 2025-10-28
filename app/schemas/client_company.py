@@ -7,10 +7,10 @@ class CompanyBase(BaseModel):
     company_name: str = Field(..., min_length=2, max_length=100)
     company_email: EmailStr
     contact_person: str = Field(..., min_length=2, max_length=100)
-    phone: Optional[str] = Field(None, regex="^\\+?[1-9]\\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     address: Optional[str] = Field(None, max_length=255)
     industry: Optional[str] = Field(None, max_length=50)
-    company_size: Optional[str] = Field(None, regex="^(small|medium|large|enterprise)$")
+    company_size: Optional[str] = Field(None, pattern=r"^(small|medium|large|enterprise)$")
 
 class CompanyCreate(CompanyBase):
     resource_plan_id: int
@@ -22,25 +22,27 @@ class CompanyCreate(CompanyBase):
 class CompanyUpdate(BaseModel):
     company_email: Optional[EmailStr] = None
     contact_person: Optional[str] = Field(None, min_length=2, max_length=100)
-    phone: Optional[str] = Field(None, regex="^\\+?[1-9]\\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     address: Optional[str] = Field(None, max_length=255)
     industry: Optional[str] = Field(None, max_length=50)
-    company_size: Optional[str] = Field(None, regex="^(small|medium|large|enterprise)$")
+    company_size: Optional[str] = Field(None, pattern=r"^(small|medium|large|enterprise)$")
 
 class CompanyResponse(CompanyBase):
     id: int
     is_active: bool
-    account_status: str
+    account_status: Optional[str] = "active"
+    resource_plan_id: Optional[int] = None
+    admin_id: Optional[int] = None
     created_at: datetime
-    resource_plan: Optional["ResourcePlanResponse"] = None
-    resource_allocation: Optional["ResourceAllocationResponse"] = None
+    updated_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class ResourcePlanBase(BaseModel):
     plan_name: str = Field(..., min_length=2, max_length=50)
-    plan_type: str = Field(..., regex="^(starter|professional|enterprise|custom)$")
+    plan_type: str = Field(..., pattern=r"^(starter|professional|enterprise|custom)$")
     max_ai_models: int = Field(..., ge=1)
     max_users: int = Field(..., ge=1)
     max_websites: int = Field(..., ge=1)
@@ -56,21 +58,23 @@ class ResourcePlanCreate(ResourcePlanBase):
 
 class ResourcePlanResponse(ResourcePlanBase):
     id: int
-    features: Dict[str, bool]
+    features: Dict[str, bool] = {}
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class ResourceAllocationResponse(BaseModel):
     id: int
-    current_ai_models: int
-    current_users: int
-    current_websites: int
-    current_monthly_requests: int
-    current_storage_gb: Decimal
-    billing_period_start: datetime
-    billing_period_end: datetime
+    current_ai_models: int = 0
+    current_users: int = 0
+    current_websites: int = 0
+    current_monthly_requests: int = 0
+    current_storage_gb: Decimal = Decimal("0")
+    billing_period_start: Optional[datetime] = None
+    billing_period_end: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }

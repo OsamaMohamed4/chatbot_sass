@@ -2,9 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, J
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..core.database import Base
-from typing import Optional, Dict, Any
 
-# SQLAlchemy Model
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
@@ -19,8 +17,8 @@ class ChatSession(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     session_metadata = Column(JSON, default={})
 
-    # Relationships
+    # Fixed Relationships
     website = relationship("Website", back_populates="chat_sessions")
     company_user = relationship("CompanyUser", back_populates="chat_sessions")
     ai_model = relationship("AiModel", back_populates="chat_sessions")
-    chat_messages = relationship("ChatMessage", back_populates="chat_session")
+    chat_messages = relationship("ChatMessage", back_populates="chat_session", cascade="all, delete-orphan")

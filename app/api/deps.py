@@ -15,9 +15,10 @@ security = HTTPBearer()
 
 class AuthDependencies:
     @staticmethod
-    async def get_current_token(
+    def get_current_token(
         credentials: HTTPAuthorizationCredentials = Security(security)
     ) -> dict:
+        """Decode and return token payload - NOT async"""
         token = credentials.credentials
         payload = security_service.decode_token(token)
         
@@ -35,13 +36,15 @@ class AuthDependencies:
         token_data: dict = Depends(get_current_token),
         db: AsyncSession = Depends(get_db)
     ) -> SystemAdmin:
+        """Get current admin from token"""
         if token_data.get("user_type") != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"
             )
         
-        admin_id = token_data.get("sub")
+        # Convert to int (JWT stores as string)
+        admin_id = int(token_data.get("sub"))
         result = await db.execute(
             select(SystemAdmin).where(
                 SystemAdmin.id == admin_id,
@@ -63,13 +66,15 @@ class AuthDependencies:
         token_data: dict = Depends(get_current_token),
         db: AsyncSession = Depends(get_db)
     ) -> CompanyUser:
+        """Get current company user from token"""
         if token_data.get("user_type") != "company_user":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"
             )
         
-        user_id = token_data.get("sub")
+        # Convert to int (JWT stores as string)
+        user_id = int(token_data.get("sub"))
         result = await db.execute(
             select(CompanyUser).where(
                 CompanyUser.id == user_id,
@@ -91,6 +96,7 @@ class AuthDependencies:
         token_data: dict = Depends(get_current_token),
         db: AsyncSession = Depends(get_db)
     ) -> Union[SystemAdmin, CompanyUser]:
+        """Get current user (admin or company user)"""
         user_type = token_data.get("user_type")
         
         if user_type == "admin":
@@ -107,6 +113,7 @@ class AuthDependencies:
     def require_superuser(
         current_admin: SystemAdmin = Depends(get_current_admin)
     ) -> SystemAdmin:
+        """Require superuser privileges"""
         if not current_admin.is_superuser:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -118,6 +125,7 @@ class AuthDependencies:
     def require_master_user(
         current_user: CompanyUser = Depends(get_current_company_user)
     ) -> CompanyUser:
+        """Require master user privileges"""
         if not current_user.is_master_user:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

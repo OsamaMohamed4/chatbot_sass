@@ -19,20 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: chatbot_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   app:
     build:
       context: ../
@@ -43,15 +29,11 @@ services:
       - POSTGRES_USER=chatbot_user
       - POSTGRES_PASSWORD=chatbot_pass
       - POSTGRES_DB=chatbot_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - ENVIRONMENT=development
     ports:
       - "8000:8000"
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     volumes:
       - ../app:/app/app
@@ -63,61 +45,5 @@ services:
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
-  celery_worker:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile
-    container_name: chatbot_celery_worker
-    environment:
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_USER=chatbot_user
-      - POSTGRES_PASSWORD=chatbot_pass
-      - POSTGRES_DB=chatbot_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - postgres
-      - redis
-      - app
-    volumes:
-      - ../app:/app/app
-    command: celery -A app.core.celery_app worker --loglevel=info
-
-  celery_beat:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile
-    container_name: chatbot_celery_beat
-    environment:
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_USER=chatbot_user
-      - POSTGRES_PASSWORD=chatbot_pass
-      - POSTGRES_DB=chatbot_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - postgres
-      - redis
-      - app
-    volumes:
-      - ../app:/app/app
-    command: celery -A app.core.celery_app beat --loglevel=info
-
-  flower:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile
-    container_name: chatbot_flower
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
-      - celery_worker
-    command: celery -A app.core.celery_app flower --port=5555
-
 volumes:
   postgres_data:
-  redis_data:

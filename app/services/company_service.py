@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.client_company import CompanyCreate, CompanyUpdate
@@ -75,6 +76,8 @@ class CompanyService:
         })
         
         await self.db.commit()
+        
+        # Refresh to get the latest data without loading relationships
         await self.db.refresh(company)
         
         return company

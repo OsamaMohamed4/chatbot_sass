@@ -1,3 +1,4 @@
+
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 
@@ -88,10 +89,10 @@ async def list_companies(
     description="Search companies by name or email"
 )
 async def search_companies(
-    q: str = Query(..., min_length=2, description="Search query"),
     service: CompanyServiceDep,
     pagination: PaginationDep,
-    current_admin: SystemAdmin = Depends(auth_deps.get_current_admin)
+    current_admin: SystemAdmin = Depends(auth_deps.get_current_admin),
+    q: str = Query(..., min_length=2, description="Search query")
 ):
     """
     Search companies by name or email
@@ -192,9 +193,9 @@ async def delete_company(
 )
 async def suspend_company(
     company_id: int,
-    reason: str = Query(..., min_length=10, description="Reason for suspension"),
     service: CompanyServiceDep,
-    current_admin: SystemAdmin = Depends(auth_deps.get_current_admin)
+    current_admin: SystemAdmin = Depends(auth_deps.get_current_admin),
+    reason: str = Query(..., min_length=10, description="Reason for suspension")
 ):
     """
     Suspend a company account:

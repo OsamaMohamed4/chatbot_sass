@@ -23,6 +23,5 @@ class SystemAdmin(Base, BaseModel):
     two_factor_enabled = Column(Boolean, default=False)
     two_factor_secret = Column(String(32))
     
-    # Relationships
+    # Fixed Relationships
     managed_companies = relationship("ClientCompany", back_populates="managed_by_admin")
-    audit_logs = relationship("AuditLog", back_populates="admin")

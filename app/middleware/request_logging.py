@@ -3,7 +3,6 @@ import uuid
 from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-
 from app.core.logging_config import access_logger, api_logger
 
 
@@ -88,19 +87,47 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         # Extract user info from token if present
         user_id = None
         user_type = None
+        company_id = None
         
         auth_header = request.headers.get("authorization")
         if auth_header and auth_header.startswith("Bearer "):
             try:
-                # You can decode token here to get user info
-                # This is a simplified version
-                pass
-            except Exception:
-                pass
+                # Extract token from "Bearer <token>"
+                token = auth_header.split(" ")[1]
+                
+                # Import here to avoid circular imports
+                from app.core.security import security_service
+                
+                # Decode token and extract user info
+                payload = security_service.decode_token(token)
+                if payload:
+                    user_id = payload.get("sub")
+                    user_type = payload.get("user_type")
+                    company_id = payload.get("company_id")
+                    
+                    # Log authentication info
+                    api_logger.debug(
+                        "Request authenticated",
+                        extra={
+                            "user_id": user_id,
+                            "user_type": user_type,
+                            "company_id": company_id
+                        }
+                    )
+            except Exception as e:
+                # Log token decode error but don't block request
+                api_logger.warning(
+                    f"Failed to decode auth token: {str(e)}",
+                    extra={
+                        "path": request.url.path,
+                        "error": str(e)
+                    }
+                )
         
-        # Store context in request state
+        # Store context in request state for use in other parts of the app
         request.state.user_id = user_id
         request.state.user_type = user_type
+        request.state.company_id = company_id
         
         response = await call_next(request)
         return response

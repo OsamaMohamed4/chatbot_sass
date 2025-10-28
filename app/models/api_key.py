@@ -2,9 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, J
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..core.database import Base
-from typing import Optional, Dict, Any
 
-# SQLAlchemy Model
 class ApiKey(Base):
     __tablename__ = "api_keys"
 
@@ -18,5 +16,5 @@ class ApiKey(Base):
     last_used_at = Column(DateTime)
     is_active = Column(Boolean, default=True, nullable=False)
 
-    # Relationships
+    # Fixed Relationships
     website = relationship("Website", back_populates="api_keys")

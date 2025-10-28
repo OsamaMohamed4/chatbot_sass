@@ -1,11 +1,7 @@
 from sqlalchemy import Column, Integer, Date, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from ..core.database import Base
-from typing import Optional
-from decimal import Decimal
-from datetime import date
 
-# SQLAlchemy Model
 class UsageAnalytics(Base):
     __tablename__ = "usage_analytics"
 
@@ -19,7 +15,7 @@ class UsageAnalytics(Base):
     total_sessions = Column(Integer, default=0, nullable=False)
     avg_response_time_ms = Column(Numeric(10, 2), default=0, nullable=False)
 
-    # Relationships
+    # Fixed Relationships
     client_company = relationship("ClientCompany", back_populates="usage_analytics")
     website = relationship("Website", back_populates="usage_analytics")
     company_user = relationship("CompanyUser", back_populates="usage_analytics")

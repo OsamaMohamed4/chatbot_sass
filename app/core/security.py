@@ -2,23 +2,52 @@ from datetime import datetime, timedelta
 from typing import Optional, Union, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import secrets
 import string
+import hashlib
 from .config import settings
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+#  Password hashing with bcrypt - FIXED
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=12  
+)
+
 
 class SecurityService:
     @staticmethod
+    def _prepare_password(password: str) -> bytes:
+        """
+        Prepare password for bcrypt (max 72 bytes)
+        Uses SHA256 to hash long passwords first
+        """
+        if len(password.encode('utf-8')) > 72:
+            # Hash long passwords with SHA256 first
+            return hashlib.sha256(password.encode('utf-8')).hexdigest().encode('utf-8')
+        return password.encode('utf-8')
+    
+    @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+        """Verify a password against its hash"""
+        try:
+            # Prepare password (handle long passwords)
+            prepared = SecurityService._prepare_password(plain_password)
+            return pwd_context.verify(prepared, hashed_password)
+        except Exception as e:
+            print(f"Password verification error: {e}")
+            return False
     
     @staticmethod
     def get_password_hash(password: str) -> str:
-        return pwd_context.hash(password)
+        """Hash a password"""
+        try:
+            # Prepare password (handle long passwords)
+            prepared = SecurityService._prepare_password(password)
+            return pwd_context.hash(prepared)
+        except Exception as e:
+            print(f"Password hashing error: {e}")
+            raise ValueError(f"Failed to hash password: {str(e)}")
     
     @staticmethod
     def create_access_token(
@@ -72,12 +101,17 @@ class SecurityService:
     
     @staticmethod
     def generate_password(length: int = 12) -> str:
+        """Generate a secure random password"""
+        if length > 64:
+            length = 64  # Limit to safe length
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
         password = ''.join(secrets.choice(alphabet) for _ in range(length))
         return password
     
     @staticmethod
     def generate_api_key() -> str:
+        """Generate a secure API key"""
         return secrets.token_urlsafe(32)
+
 
 security_service = SecurityService()

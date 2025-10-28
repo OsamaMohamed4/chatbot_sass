@@ -2,10 +2,8 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
-
 from app.core.config import settings
 from app.core.logging_config import setup_logging
-from app.middleware.error_handler import register_exception_handlers
 from app.middleware.request_logging import RequestLoggingMiddleware, RequestContextMiddleware
 from app.api.v1 import auth, companies
 
@@ -65,10 +63,7 @@ app.add_middleware(
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestContextMiddleware)
 
-# ========================
-# Exception Handlers
-# ========================
-register_exception_handlers(app)
+
 
 # ========================
 # Health Check Endpoint

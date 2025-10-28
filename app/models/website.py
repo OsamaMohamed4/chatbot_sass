@@ -27,9 +27,12 @@ class Website(Base, BaseModel):
     company_id = Column(Integer, ForeignKey("client_companies.id"))
     primary_ai_model_id = Column(Integer, ForeignKey("ai_models.model_id"))
     
-    # Relationships
+    # Fixed Relationships
     company = relationship("ClientCompany", back_populates="websites")
-    ai_models = relationship("AiModel", back_populates="website", cascade="all, delete-orphan")
+    ai_models = relationship("AiModel", back_populates="website", cascade="all, delete-orphan", foreign_keys="[AiModel.website_id]")
+    primary_ai_model = relationship("AiModel", foreign_keys=[primary_ai_model_id], post_update=True)
     user_access = relationship("UserWebsiteAccess", back_populates="website", cascade="all, delete-orphan")
-    api_keys = relationship("ApiKey", back_populates="website")
+    api_keys = relationship("ApiKey", back_populates="website", cascade="all, delete-orphan")
+    chat_sessions = relationship("ChatSession", back_populates="website")
+    usage_analytics = relationship("UsageAnalytics", back_populates="website")
 

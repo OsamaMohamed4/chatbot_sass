@@ -26,12 +26,11 @@ class ClientCompany(Base, BaseModel):
     admin_id = Column(Integer, ForeignKey("system_admins.id"))
     resource_plan_id = Column(Integer, ForeignKey("resource_plans.id"))
     
+    # Fixed Relationships
     managed_by_admin = relationship("SystemAdmin", back_populates="managed_companies")
     resource_plan = relationship("ResourcePlan", back_populates="companies")
     resource_allocation = relationship("ResourceAllocation", back_populates="company", uselist=False)
     websites = relationship("Website", back_populates="company", cascade="all, delete-orphan")
     users = relationship("CompanyUser", back_populates="company", cascade="all, delete-orphan")
     billing_records = relationship("BillingRecord", back_populates="company")
-    api_keys = relationship("ApiKey", back_populates="company")
-
-
+    usage_analytics = relationship("UsageAnalytics", back_populates="client_company")

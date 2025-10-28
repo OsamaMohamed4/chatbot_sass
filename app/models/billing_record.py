@@ -1,11 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Numeric, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from ..core.database import Base
-from typing import Optional, Dict, Any
-from decimal import Decimal
-from datetime import date
 
-# SQLAlchemy Model
 class BillingRecord(Base):
     __tablename__ = "billing_records"
 
@@ -17,5 +13,5 @@ class BillingRecord(Base):
     status = Column(String(50), default="pending", nullable=False)
     usage_details = Column(JSON, default={})
 
-    # Relationships
-    client_company = relationship("ClientCompany", back_populates="billing_records")
+    # Fixed Relationships
+    company = relationship("ClientCompany", back_populates="billing_records")
