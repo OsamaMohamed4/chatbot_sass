@@ -24,10 +24,6 @@ router = APIRouter()
 auth_deps = AuthDependencies()
 
 
-# ========================
-# Endpoints
-# ========================
-
 @router.post(
     "",
     response_model=SuccessResponse[WebsiteResponse],
@@ -49,19 +45,19 @@ async def create_website(
     """
     service = WebsiteService(db)
     
-    # Use company_id from website_data or current user's company
-    company_id = website_data.company_id if hasattr(website_data, 'company_id') else current_user.company_id
-    
-    # Check if user has permission
-    if company_id != current_user.company_id:
+    # Check if user has permission (company_id must match)
+    if website_data.company_id != current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot create website for another company"
         )
     
+    # Convert Pydantic model to dict
+    website_dict = website_data.model_dump()
+    
     website = await service.create_website(
-        website_data.model_dump(exclude_unset=True),
-        company_id
+        website_dict,
+        current_user.company_id
     )
     
     return success_response(
@@ -186,10 +182,10 @@ async def update_website(
             detail="Access denied to this website"
         )
     
-    updated_website = await service.update_website(
-        website_id,
-        website_data.model_dump(exclude_unset=True)
-    )
+    # Convert to dict and exclude unset values
+    update_dict = website_data.model_dump(exclude_unset=True)
+    
+    updated_website = await service.update_website(website_id, update_dict)
     
     return success_response(
         data=WebsiteResponse.model_validate(updated_website),

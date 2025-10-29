@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field, validator
+from pydantic import BaseModel, HttpUrl, Field, field_validator
 from typing import Optional, Literal
 from datetime import datetime
 from decimal import Decimal
@@ -8,7 +8,6 @@ class WebsiteBase(BaseModel):
     website_name: str = Field(..., min_length=2, max_length=100)
     website_url: HttpUrl
     description: Optional[str] = None
-    #widget_position: Literal["bottom-right", "bottom-left", "top-right", "top-left"] = "bottom-right"
     widget_color: str = Field(default="#0084ff", pattern=r'^#[0-9A-Fa-f]{6}$')
     welcome_message: Optional[str] = None
     placeholder_text: Optional[str] = Field(default="Type your message...")
@@ -30,7 +29,6 @@ class WebsiteUpdate(BaseModel):
     website_name: Optional[str] = Field(None, min_length=2, max_length=100)
     website_url: Optional[HttpUrl] = None
     description: Optional[str] = None
-    #widget_position: Optional[Literal["bottom-right", "bottom-left", "top-right", "top-left"]] = None
     widget_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     widget_icon: Optional[str] = None
     welcome_message: Optional[str] = None
@@ -50,38 +48,73 @@ class WebsiteUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 # Response Schema
-class WebsiteResponse(WebsiteBase):
+class WebsiteResponse(BaseModel):
     id: int
     company_id: int
-    domain_verified: bool
-    verified_at: Optional[datetime]
+    website_name: str
+    website_url: str  # Changed from HttpUrl to str for response
+    domain: Optional[str] = None
+    description: Optional[str] = None
+    
+    # Widget Configuration
+    widget_color: str
     widget_size: str
+    widget_position: Optional[str] = None
+    widget_icon: Optional[str] = None
+    placeholder_text: str
     show_powered_by: bool
+    custom_css: Optional[str] = None
+    auto_open_delay: Optional[int] = None
+    enable_sound: bool
+    enable_file_upload: bool
+    allowed_file_types: Optional[list] = []
     widget_status: str
+    
+    # Business Hours
+    business_hours_enabled: bool
+    business_hours: Optional[dict] = {}
+    welcome_message: Optional[str] = None
+    offline_message: Optional[str] = None
+    
+    # Verification & Security
+    domain_verified: bool
+    verified_at: Optional[datetime] = None
+    allowed_domains: Optional[list] = []
     widget_api_key: str
+    
+    # Analytics
     total_visitors: int
     total_conversations: int
-    conversion_rate: Optional[Decimal]
+    conversion_rate: Optional[int] = None
+    
+    # Integration
+    embed_code: Optional[str] = None
+    api_endpoint: Optional[str] = None
+    
+    # Status
     is_active: bool
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
-# List Response
+# List Response (Simplified)
 class WebsiteListResponse(BaseModel):
     id: int
     website_name: str
     website_url: str
+    domain: Optional[str] = None
     domain_verified: bool
     widget_status: str
     total_conversations: int
     is_active: bool
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 # Detail Response
 class WebsiteDetailResponse(WebsiteResponse):
@@ -132,8 +165,9 @@ class WebsiteAnalyticsResponse(BaseModel):
     satisfaction_score: Optional[Decimal]
     engagement_rate: Optional[Decimal]
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class WebsiteAnalyticsSummary(BaseModel):
     total_visitors: int
