@@ -14,7 +14,7 @@ class CompanyUser(Base, BaseModel):
     last_name = Column(String(50), nullable=False)
     
     # Role & Permissions
-    role = Column(String(20), nullable=False)  # master, admin, operator, viewer
+    role = Column(String(20), nullable=False)
     is_master_user = Column(Boolean, default=False)
     custom_permissions = Column(JSON, default=dict)
     
@@ -30,7 +30,16 @@ class CompanyUser(Base, BaseModel):
     
     # Fixed Relationships
     company = relationship("ClientCompany", back_populates="users")
-    created_by = relationship("CompanyUser", remote_side="CompanyUser.id", foreign_keys=[created_by_id])
-    website_access = relationship("UserWebsiteAccess", back_populates="user", cascade="all, delete-orphan", foreign_keys="[UserWebsiteAccess.user_id]")
+    created_by = relationship(
+        "CompanyUser",
+        remote_side="CompanyUser.id",
+        foreign_keys=[created_by_id]
+    )
+    website_access = relationship(
+        "UserWebsiteAccess",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="[UserWebsiteAccess.user_id]"
+    )
     chat_sessions = relationship("ChatSession", back_populates="company_user")
     usage_analytics = relationship("UsageAnalytics", back_populates="company_user")

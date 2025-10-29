@@ -15,11 +15,11 @@ class ClientCompany(Base, BaseModel):
     
     # Business Info
     industry = Column(String(50))
-    company_size = Column(String(20))  # small, medium, large, enterprise
+    company_size = Column(String(20))
     tax_id = Column(String(50))
     
     # Account Info
-    account_status = Column(String(20), default="active")  # active, suspended, cancelled
+    account_status = Column(String(20), default="active")
     suspension_reason = Column(String(255))
     
     # Relationships
@@ -29,8 +29,20 @@ class ClientCompany(Base, BaseModel):
     # Fixed Relationships
     managed_by_admin = relationship("SystemAdmin", back_populates="managed_companies")
     resource_plan = relationship("ResourcePlan", back_populates="companies")
-    resource_allocation = relationship("ResourceAllocation", back_populates="company", uselist=False)
-    websites = relationship("Website", back_populates="company", cascade="all, delete-orphan")
-    users = relationship("CompanyUser", back_populates="company", cascade="all, delete-orphan")
+    resource_allocation = relationship(
+        "ResourceAllocation",
+        back_populates="company",
+        uselist=False
+    )
+    websites = relationship(
+        "Website",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+    users = relationship(
+        "CompanyUser",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
     billing_records = relationship("BillingRecord", back_populates="company")
     usage_analytics = relationship("UsageAnalytics", back_populates="client_company")

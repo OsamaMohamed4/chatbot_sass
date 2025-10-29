@@ -1,7 +1,6 @@
 
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
-
 from app.api.dependencies import CompanyServiceDep, PaginationDep
 from app.api.deps import AuthDependencies
 from app.schemas.client_company import (

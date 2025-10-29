@@ -8,7 +8,7 @@ class WebsiteBase(BaseModel):
     website_name: str = Field(..., min_length=2, max_length=100)
     website_url: HttpUrl
     description: Optional[str] = None
-    widget_position: Literal["bottom-right", "bottom-left", "top-right", "top-left"] = "bottom-right"
+    #widget_position: Literal["bottom-right", "bottom-left", "top-right", "top-left"] = "bottom-right"
     widget_color: str = Field(default="#0084ff", pattern=r'^#[0-9A-Fa-f]{6}$')
     welcome_message: Optional[str] = None
     placeholder_text: Optional[str] = Field(default="Type your message...")
@@ -30,7 +30,7 @@ class WebsiteUpdate(BaseModel):
     website_name: Optional[str] = Field(None, min_length=2, max_length=100)
     website_url: Optional[HttpUrl] = None
     description: Optional[str] = None
-    widget_position: Optional[Literal["bottom-right", "bottom-left", "top-right", "top-left"]] = None
+    #widget_position: Optional[Literal["bottom-right", "bottom-left", "top-right", "top-left"]] = None
     widget_color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     widget_icon: Optional[str] = None
     welcome_message: Optional[str] = None

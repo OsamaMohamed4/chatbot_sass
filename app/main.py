@@ -4,8 +4,9 @@ from fastapi.responses import JSONResponse
 import logging
 from app.core.config import settings
 from app.core.logging_config import setup_logging
+from app.middleware.error_handler import register_exception_handlers
 from app.middleware.request_logging import RequestLoggingMiddleware, RequestContextMiddleware
-from app.api.v1 import auth, companies
+from app.api.v1 import auth, companies, websites, users  
 
 # Setup logging first
 setup_logging()
@@ -28,6 +29,7 @@ app = FastAPI(
     * **Authentication & Authorization**: JWT-based authentication with role-based access control
     * **Company Management**: Create and manage client companies with resource plans
     * **User Management**: Multi-level user hierarchy with custom permissions
+    * **Website Management**: Create and manage websites with chatbot widgets
     * **Resource Allocation**: Track and manage resource usage and limits
     * **Comprehensive Logging**: Structured logging with request tracking
     * **Error Handling**: Standardized error responses with detailed information
@@ -35,10 +37,9 @@ app = FastAPI(
     ## Authentication
     
     All endpoints (except auth endpoints) require a valid JWT token in the Authorization header:
-    
-    ```
+```
     Authorization: Bearer <your_access_token>
-    ```
+```
     """,
     contact={
         "name": "API Support",
@@ -63,7 +64,10 @@ app.add_middleware(
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestContextMiddleware)
 
-
+# ========================
+# Exception Handlers
+# ========================
+register_exception_handlers(app)
 
 # ========================
 # Health Check Endpoint
@@ -100,6 +104,19 @@ app.include_router(
     companies.router,
     prefix=f"{settings.API_V1_STR}/companies",
     tags=["Companies"]
+)
+
+
+app.include_router(
+    websites.router,
+    prefix=f"{settings.API_V1_STR}/websites",
+    tags=["Websites"]
+)
+
+app.include_router(
+    users.router,
+    prefix=f"{settings.API_V1_STR}/users",
+    tags=["Users"]
 )
 
 # ========================

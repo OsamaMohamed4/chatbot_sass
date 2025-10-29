@@ -3,8 +3,11 @@ from fastapi import Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.services.company_service import CompanyService
+from app.services.website_service import WebsiteService  
+from app.services.user_service import UserService  
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.website_repository import WebsiteRepository  
 
 
 # ========================
@@ -25,6 +28,13 @@ def get_user_repository(
     return UserRepository(db)
 
 
+def get_website_repository(
+    db: AsyncSession = Depends(get_db)
+) -> WebsiteRepository:
+    """Get website repository instance"""
+    return WebsiteRepository(db)
+
+
 # ========================
 # Service Dependencies
 # ========================
@@ -34,6 +44,20 @@ def get_company_service(
 ) -> CompanyService:
     """Get company service instance"""
     return CompanyService(db)
+
+
+def get_website_service(
+    db: AsyncSession = Depends(get_db)
+) -> WebsiteService:
+    """Get website service instance"""
+    return WebsiteService(db)
+
+
+def get_user_service(
+    db: AsyncSession = Depends(get_db)
+) -> UserService:
+    """Get user service instance"""
+    return UserService(db)
 
 
 # ========================
@@ -59,7 +83,10 @@ def get_pagination_params(
 # ========================
 
 CompanyServiceDep = Annotated[CompanyService, Depends(get_company_service)]
+WebsiteServiceDep = Annotated[WebsiteService, Depends(get_website_service)]  
+UserServiceDep = Annotated[UserService, Depends(get_user_service)] 
 CompanyRepositoryDep = Annotated[CompanyRepository, Depends(get_company_repository)]
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
+WebsiteRepositoryDep = Annotated[WebsiteRepository, Depends(get_website_repository)] 
 PaginationDep = Annotated[dict, Depends(get_pagination_params)]
 DatabaseDep = Annotated[AsyncSession, Depends(get_db)]
