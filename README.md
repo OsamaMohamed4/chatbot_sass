@@ -1,12 +1,12 @@
-# 🤖 Chatbot SaaS Platform
+# Chatbot SaaS Platform
 
-## 📋 Overview
+## Overview
 A complete **SaaS platform** for managing AI-powered Chatbots.  
 This platform provides an integrated management system for **companies, users, and websites**, built with **FastAPI**, **PostgreSQL**, and **Docker**.
 
 ---
 
-## 🚀 Tech Stack
+##  Tech Stack
 - **Backend:** FastAPI (Python 3.10+)
 - **Database:** PostgreSQL (Dockerized)
 - **ORM:** SQLAlchemy + Alembic
@@ -16,22 +16,22 @@ This platform provides an integrated management system for **companies, users, a
 
 ---
 
-## 🧱 Prerequisites
+## Prerequisites
 Before you start, make sure you have installed:
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-> 💡 You don’t need to install PostgreSQL or Redis manually — everything runs in Docker.
+>  You don’t need to install PostgreSQL or Redis manually — everything runs in Docker.
 
 ---
 
-## ⚙️ Setup & Installation
+##  Setup & Installation
 
-### 1️⃣ Clone the Repository
+### 1️ Clone the Repository
 ```bash
 git clone <repository-url>
 cd chatbot-saas-platform
-2️⃣ Create .env File
+2 Create .env File
 Create a .env file in the root directory with this minimal config:
 
 ini
@@ -42,7 +42,7 @@ POSTGRES_PASSWORD=chatbot_pass
 POSTGRES_DB=chatbot_saas
 SECRET_KEY=supersecretkey
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-3️⃣ Run the Platform using Docker
+3️ Run the Platform using Docker
 bash
 Copy code
 cd docker
@@ -55,7 +55,7 @@ Start FastAPI backend
 
 Automatically apply environment variables
 
-4️⃣ Initialize the Database
+4️ Initialize the Database
 After containers are running:
 
 bash
@@ -63,19 +63,19 @@ Copy code
 alembic upgrade head
 python -m app.core.init_db
 This creates:
-✅ Superadmin account
-✅ Default subscription plans
-✅ Demo company & master user
+Superadmin account
+Default subscription plans
+Demo company & master user
 
 uvicorn app.main:app --reload
 
-5️⃣ Access the Application
+Access the Application
 Resource	URL
 Swagger Docs	http://localhost:8000/docs
 Redoc	http://localhost:8000/redoc
 Health Check	http://localhost:8000/health
 
-🔑 Default Accounts
+Default Accounts
 Role	Email	Password
 Superadmin	admin@chatbot-saas.com	changeme123
 Demo User	demo@chatbot-saas.com	demo123
