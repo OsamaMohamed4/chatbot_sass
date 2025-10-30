@@ -106,13 +106,13 @@ app.include_router(
     tags=["Companies"]
 )
 
-
 app.include_router(
     websites.router,
     prefix=f"{settings.API_V1_STR}/websites",
     tags=["Websites"]
 )
 
+# ✅ أضفت users router
 app.include_router(
     users.router,
     prefix=f"{settings.API_V1_STR}/users",

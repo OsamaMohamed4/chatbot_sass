@@ -63,16 +63,10 @@ class UserService:
     async def create_user(
         self,
         user_data: dict,
+        company_id: int,  # ✅ أضفت company_id بدلاً من created_by_id
         created_by_id: int
     ) -> CompanyUser:
         """Create a new user"""
-        # Get creator
-        creator = await self.user_repo.get_by_id(created_by_id)
-        if not creator:
-            raise ResourceNotFoundException("User", created_by_id)
-        
-        company_id = creator.company_id
-        
         # Check user limit
         await self._check_user_limit(company_id)
         

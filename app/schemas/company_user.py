@@ -1,43 +1,39 @@
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from ..core.database import Base
-from .base import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-
+from datetime import datetime
 
 
 class CompanyUserBase(BaseModel):
-    username: str
+    username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    first_name: str
-    last_name: str
-    role: str
-    is_master_user: bool = False
+    first_name: str = Field(..., min_length=2, max_length=50)
+    last_name: str = Field(..., min_length=2, max_length=50)
+    role: str = Field(..., pattern=r"^(admin|operator|viewer)$")
+
 
 class CompanyUserCreate(CompanyUserBase):
-    company_id: int
-    password: str
-    parent_user_id: Optional[int] = None
+    password: str = Field(..., min_length=8)
+
 
 class CompanyUserUpdate(BaseModel):
-    username: Optional[str] = None
     email: Optional[EmailStr] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    role: Optional[str] = None
-    password: Optional[str] = None
-    is_active: Optional[bool] = None
-    last_login_at: Optional[datetime] = None
+    first_name: Optional[str] = Field(None, min_length=2, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=2, max_length=50)
+    role: Optional[str] = Field(None, pattern=r"^(admin|operator|viewer)$")
+    password: Optional[str] = Field(None, min_length=8)
+
 
 class CompanyUserResponse(CompanyUserBase):
-    user_id: int
+    id: int
     company_id: int
-    parent_user_id: Optional[int] = None
-    created_at: datetime
-    last_login_at: Optional[datetime] = None
+    is_master_user: bool
     is_active: bool
-
-    class Config:
-        from_attributes = True
+    created_by_id: Optional[int] = None
+    last_login_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    model_config = {
+        "from_attributes": True
+    }

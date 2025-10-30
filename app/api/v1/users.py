@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
 from app.api.dependencies import PaginationDep, DatabaseDep
-from app.api.deps import AuthDependencies
+from app.api.deps import get_current_company_user, require_master_user
 from app.services.user_service import UserService
 from app.schemas.responses import (
     SuccessResponse,
@@ -16,7 +16,6 @@ from app.schemas.responses import (
 from app.models.company_user import CompanyUser
 
 router = APIRouter()
-auth_deps = AuthDependencies()
 
 
 # ========================
@@ -59,14 +58,6 @@ class UserResponse(BaseModel):
 
 
 # ========================
-# Dependency
-# ========================
-
-def get_user_service(db: DatabaseDep) -> UserService:
-    return UserService(db)
-
-
-# ========================
 # Endpoints
 # ========================
 
@@ -80,7 +71,7 @@ def get_user_service(db: DatabaseDep) -> UserService:
 async def create_user(
     user_data: UserCreate,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(auth_deps.require_master_user)
+    current_user: CompanyUser = Depends(require_master_user)  # ✅ Fixed
 ):
     """Create new user (master only)"""
     service = UserService(db)
@@ -105,7 +96,7 @@ async def list_users(
     db: DatabaseDep,
     pagination: PaginationDep,
     role: Optional[str] = Query(None, description="Filter by role"),
-    current_user: CompanyUser = Depends(auth_deps.get_current_company_user)
+    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
 ):
     """List company users"""
     service = UserService(db)
@@ -140,7 +131,7 @@ async def list_users(
 async def get_user(
     user_id: int,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(auth_deps.get_current_company_user)
+    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
 ):
     """Get user details"""
     service = UserService(db)
@@ -166,7 +157,7 @@ async def update_user(
     user_id: int,
     user_data: UserUpdate,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(auth_deps.get_current_company_user)
+    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
 ):
     """Update user"""
     service = UserService(db)
@@ -200,7 +191,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(auth_deps.require_master_user)
+    current_user: CompanyUser = Depends(require_master_user)  # ✅ Fixed
 ):
     """Delete user (master only)"""
     service = UserService(db)
