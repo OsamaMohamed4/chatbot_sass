@@ -43,12 +43,12 @@ async def create_initial_superuser(db: AsyncSession) -> None:
             )
             db.add(admin)
             await db.flush()
-            logger.info(f"✅ Superuser created: {settings.FIRST_SUPERUSER_EMAIL}")
+            logger.info(f"Superuser created: {settings.FIRST_SUPERUSER_EMAIL}")
         else:
-            logger.info(f"ℹ️  Superuser already exists: {settings.FIRST_SUPERUSER_EMAIL}")
+            logger.info(f"ℹSuperuser already exists: {settings.FIRST_SUPERUSER_EMAIL}")
     
     except Exception as e:
-        logger.error(f"❌ Error creating superuser: {str(e)}")
+        logger.error(f"Error creating superuser: {str(e)}")
         raise
 
 
@@ -145,12 +145,12 @@ async def create_default_resource_plans(db: AsyncSession) -> None:
                 plan = ResourcePlan(**plan_data)
                 db.add(plan)
                 await db.flush()
-                logger.info(f"✅ Resource plan created: {plan_data['plan_name']}")
+                logger.info(f" Resource plan created: {plan_data['plan_name']}")
             else:
-                logger.info(f"ℹ️  Resource plan already exists: {plan_data['plan_name']}")
+                logger.info(f"ℹResource plan already exists: {plan_data['plan_name']}")
         
     except Exception as e:
-        logger.error(f"❌ Error creating resource plans: {str(e)}")
+        logger.error(f"Error creating resource plans: {str(e)}")
         raise
 
 
@@ -169,7 +169,7 @@ async def create_demo_company(db: AsyncSession) -> None:
         existing_company = result.scalar_one_or_none()
         
         if existing_company:
-            logger.info("ℹ️  Demo company already exists")
+            logger.info("Demo company already exists")
             return
         
         # Get Starter plan
@@ -179,7 +179,7 @@ async def create_demo_company(db: AsyncSession) -> None:
         starter_plan = result.scalar_one_or_none()
         
         if not starter_plan:
-            logger.warning("⚠️  Starter plan not found, skipping demo company creation")
+            logger.warning("Starter plan not found, skipping demo company creation")
             return
         
         # Get superadmin
@@ -242,12 +242,12 @@ async def create_demo_company(db: AsyncSession) -> None:
         db.add(allocation)
         await db.flush()
         
-        logger.info("✅ Demo company created successfully")
-        logger.info("   📧 Email: demo@chatbot-saas.com")
-        logger.info("   🔑 Password: demo123")
+        logger.info("Demo company created successfully")
+        logger.info("Email: demo@chatbot-saas.com")
+        logger.info("Password: demo123")
         
     except Exception as e:
-        logger.error(f"❌ Error creating demo company: {str(e)}")
+        logger.error(f"Error creating demo company: {str(e)}")
         raise
 
 
@@ -256,37 +256,37 @@ async def create_demo_company(db: AsyncSession) -> None:
 # ========================================
 async def init_db() -> None:
     """Initialize database with default data"""
-    logger.info("🚀 Starting database initialization...")
+    logger.info("Starting database initialization...")
     logger.info("=" * 60)
     
     async with AsyncSessionLocal() as db:
         try:
             # Step 1: Create superuser
-            logger.info("\n📝 Step 1: Creating system superuser...")
+            logger.info("\n Step 1: Creating system superuser...")
             await create_initial_superuser(db)
             
             # Step 2: Create resource plans
-            logger.info("\n📝 Step 2: Creating resource plans...")
+            logger.info("\n Step 2: Creating resource plans...")
             await create_default_resource_plans(db)
             
             # Step 3: Create demo company (optional)
-            logger.info("\n📝 Step 3: Creating demo company...")
+            logger.info("\nStep 3: Creating demo company...")
             await create_demo_company(db)
             
             # Commit all changes
             await db.commit()
             
             logger.info("\n" + "=" * 60)
-            logger.info("✅ Database initialization completed successfully!")
+            logger.info("Database initialization completed successfully!")
             logger.info("=" * 60)
-            logger.info("\n🔑 Default Credentials:")
+            logger.info("\ Default Credentials:")
             logger.info(f"   Admin: {settings.FIRST_SUPERUSER_EMAIL} / {settings.FIRST_SUPERUSER_PASSWORD}")
             logger.info("   Demo:  demo@chatbot-saas.com / demo123")
             logger.info("\n")
             
         except Exception as e:
             await db.rollback()
-            logger.error(f"\n❌ Database initialization failed: {str(e)}")
+            logger.error(f"\n Database initialization failed: {str(e)}")
             logger.error("=" * 60)
             raise
 

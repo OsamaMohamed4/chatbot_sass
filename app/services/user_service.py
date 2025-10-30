@@ -63,7 +63,7 @@ class UserService:
     async def create_user(
         self,
         user_data: dict,
-        company_id: int,  # ✅ أضفت company_id بدلاً من created_by_id
+        company_id: int, 
         created_by_id: int
     ) -> CompanyUser:
         """Create a new user"""

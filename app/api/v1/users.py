@@ -71,7 +71,7 @@ class UserResponse(BaseModel):
 async def create_user(
     user_data: UserCreate,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(require_master_user)  # ✅ Fixed
+    current_user: CompanyUser = Depends(require_master_user)  
 ):
     """Create new user (master only)"""
     service = UserService(db)
@@ -96,7 +96,7 @@ async def list_users(
     db: DatabaseDep,
     pagination: PaginationDep,
     role: Optional[str] = Query(None, description="Filter by role"),
-    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
+    current_user: CompanyUser = Depends(get_current_company_user)  
 ):
     """List company users"""
     service = UserService(db)
@@ -131,7 +131,7 @@ async def list_users(
 async def get_user(
     user_id: int,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
+    current_user: CompanyUser = Depends(get_current_company_user)  
 ):
     """Get user details"""
     service = UserService(db)
@@ -157,7 +157,7 @@ async def update_user(
     user_id: int,
     user_data: UserUpdate,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(get_current_company_user)  # ✅ Fixed
+    current_user: CompanyUser = Depends(get_current_company_user)  
 ):
     """Update user"""
     service = UserService(db)
@@ -191,7 +191,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: DatabaseDep,
-    current_user: CompanyUser = Depends(require_master_user)  # ✅ Fixed
+    current_user: CompanyUser = Depends(require_master_user)  
 ):
     """Delete user (master only)"""
     service = UserService(db)
